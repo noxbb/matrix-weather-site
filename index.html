@@ -54,7 +54,7 @@
         <!-- Приветствие и флаг Украины -->
         <div class="block">
             <h1>Добро пожаловать!</h1>
-            <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Ukraine_flag_animation.svg/300px-Ukraine_flag_animation.svg.png" alt="Флаг Украины">
+            <img class="flag" src="https://images.prom.ua/3733128544_w640_h640_foto-fon-vinilovij-patriotichnij.jpg" alt="Флаг Украины">
         </div>
 
         <!-- Блок информации о пользователе -->
@@ -135,34 +135,31 @@
             });
         }
 
-        // Получаем курс валют
-        async function fetchCurrencyRates() {
-            try {
-                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-                const data = await response.json();
-                displayCurrencyRates(data.rates);
-            } catch (error) {
-                console.error('Ошибка при получении курса валют:', error);
-            }
-        }
+        // Получаем новости
+        async function fetchRSSNews() {
+            const proxy = 'https://api.rss2json.com/v1/api.json?rss_url=';
+            const rssUrls = [
+                'https://www.pravda.com.ua/rss/view_news/', // Новости Украины
+                'https://rss.nytimes.com/services/xml/rss/nyt/World.xml' // Новости мира
+            ];
+            
+            let newsList = document.getElementById('news-list');
+            newsList.innerHTML = '';
 
-        // Отображаем курс валют
-        function displayCurrencyRates(rates) {
-            const currencyList = document.getElementById('currency-list');
-            currencyList.innerHTML = '';
-            const currencies = {
-                "USD": "Доллар",
-                "EUR": "Евро",
-                "UAH": "Гривна"
-            };
+            for (const url of rssUrls) {
+                try {
+                    let response = await fetch(proxy + encodeURIComponent(url));
+                    let data = await response.json();
 
-            Object.keys(currencies).forEach(currency => {
-                if (rates[currency]) {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${currencies[currency]}: ${rates[currency]} UAH`;
-                    currencyList.appendChild(listItem);
+                    data.items.slice(0, 5).forEach(item => {
+                        let li = document.createElement('li');
+                        li.innerHTML = `<a href="${item.link}" target="_blank">${item.title}</a>`;
+                        newsList.appendChild(li);
+                    });
+                } catch (error) {
+                    console.error('Ошибка загрузки RSS:', error);
                 }
-            });
+            }
         }
 
         // Получаем IP и данные о пользователе
@@ -182,9 +179,9 @@
             document.getElementById('user-browser').textContent = navigator.userAgent;
         }
 
-        // Загружаем новости, погоду, курсы валют и информацию о пользователе
+        // Загружаем данные
         fetchWeatherData();
-        fetchCurrencyRates();
+        fetchRSSNews();
         fetchUserInfo();
     </script>
 
