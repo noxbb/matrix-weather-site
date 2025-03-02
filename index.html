@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода и Курс Валют</title>
+    <style>
+        body {
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+        .block {
+            background-color: #111;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        h1, h2 {
+            margin-bottom: 10px;
+        }
+        .flag {
+            width: 100%;
+            max-width: 400px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Приветствие и флаг Украины -->
+        <div class="block">
+            <h1>Добро пожаловать!</h1>
+            <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Ukraine.gif" alt="Флаг Украины">
+        </div>
+
+        <!-- Погода в Днепре (почасовой прогноз) -->
+        <div class="block" id="hourly-weather">
+            <h2>Погода в Днепре (сегодня)</h2>
+            <ul id="hourly-forecast">Загрузка...</ul>
+        </div>
+
+        <!-- Погода в Днепре (прогноз на неделю) -->
+        <div class="block" id="weekly-weather">
+            <h2>Прогноз на неделю</h2>
+            <ul id="weekly-forecast">Загрузка...</ul>
+        </div>
+
+        <!-- Курс валют -->
+        <div class="block" id="currency-rates">
+            <h2>Курс валют</h2>
+            <ul id="currency-list">Загрузка...</ul>
+        </div>
+    </div>
+
+    <script>
+        const weatherApiKey = '485c304f7f4a4d2fa49141208250203';
+        const city = 'Днепр';
+
+        // Получаем данные о погоде
+        async function fetchWeatherData() {
+            try {
+                const response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${weatherApiKey}&q=${city}&days=7&lang=ru`);
+                const data = await response.json();
+                displayHourlyForecast(data.forecast.forecastday[0].hour);
+                displayWeeklyForecast(data.forecast.forecastday);
+            } catch (error) {
+                console.error('Ошибка при получении погоды:', error);
+            }
+        }
+
+        // Почасовой прогноз
+        function displayHourlyForecast(hourlyData) {
+            const hourlyForecast = document.getElementById('hourly-forecast');
+            hourlyForecast.innerHTML = '';
+            hourlyData.slice(0, 6).forEach(hour => { // Берём только ближайшие 6 часов
+                const time = new Date(hour.time).getHours();
+                const temp = hour.temp_c;
+                const condition = hour.condition.text;
+                const listItem = document.createElement('li');
+                listItem.textContent = `${time}:00 - ${temp}°C, ${condition}`;
+                hourlyForecast.appendChild(listItem);
+            });
+        }
+
+        // Прогноз на неделю
+        function displayWeeklyForecast(dailyData) {
+            const weeklyForecast = document.getElementById('weekly-forecast');
+            weeklyForecast.innerHTML = '';
+            dailyData.forEach(day => {
+                const date = new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+                const minTemp = day.day.mintemp_c;
+                const maxTemp = day.day.maxtemp_c;
+                const condition = day.day.condition.text;
+                const listItem = document.createElement('li');
+                listItem.textContent = `${date}: ${minTemp}°C / ${maxTemp}°C, ${condition}`;
+                weeklyForecast.appendChild(listItem);
+            });
+        }
+
+        // Получаем курс валют
+        async function fetchCurrencyRates() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const data = await response.json();
+                displayCurrencyRates(data.rates);
+            } catch (error) {
+                console.error('Ошибка при получении курса валют:', error);
+            }
+        }
+
+        // Отображаем курс валют
+        function displayCurrencyRates(rates) {
+            const currencyList = document.getElementById('currency-list');
+            currencyList.innerHTML = '';
+            const currencies = {
+                "USD": "Доллар",
+                "EUR": "Евро",
+                "UAH": "Гривна"
+            };
+
+            Object.keys(currencies).forEach(currency => {
+                if (rates[currency]) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${currencies[currency]}: ${rates[currency]} UAH`;
+                    currencyList.appendChild(listItem);
+                }
+            });
+        }
+
+        // Загружаем данные при открытии страницы
+        fetchWeatherData();
+        fetchCurrencyRates();
+    </script>
+
+</body>
+</html>
