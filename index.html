@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Погода и Курс Валют</title>
+    <title>Новости, Погода и Курс Валют</title>
     <style>
         body {
             background-color: black;
@@ -33,6 +33,13 @@
             width: 100%;
             max-width: 400px;
         }
+        a {
+            color: #00ff00;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
         @media (max-width: 600px) {
             .container {
                 width: 100%;
@@ -47,16 +54,30 @@
         <!-- Приветствие и флаг Украины -->
         <div class="block">
             <h1>Добро пожаловать!</h1>
-            <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Ukraine.gif" alt="Флаг Украины">
+            <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Ukraine_flag_animation.svg/300px-Ukraine_flag_animation.svg.png" alt="Флаг Украины">
         </div>
 
-        <!-- Погода в Днепре (почасовой прогноз) -->
+        <!-- Блок информации о пользователе -->
+        <div class="block" id="user-info">
+            <h2>Ваша информация</h2>
+            <p><strong>IP:</strong> <span id="user-ip">Загрузка...</span></p>
+            <p><strong>Локация:</strong> <span id="user-location">Загрузка...</span></p>
+            <p><strong>Браузер:</strong> <span id="user-browser"></span></p>
+        </div>
+
+        <!-- Блок новостей -->
+        <div class="block" id="news-block">
+            <h2>Новости Украины и мира</h2>
+            <ul id="news-list">Загрузка...</ul>
+        </div>
+
+        <!-- Блок погоды в Днепре -->
         <div class="block" id="hourly-weather">
             <h2>Погода в Днепре (сегодня)</h2>
             <ul id="hourly-forecast">Загрузка...</ul>
         </div>
 
-        <!-- Погода в Днепре (прогноз на неделю) -->
+        <!-- Блок прогноза на неделю -->
         <div class="block" id="weekly-weather">
             <h2>Прогноз на неделю</h2>
             <ul id="weekly-forecast">Загрузка...</ul>
@@ -89,7 +110,7 @@
         function displayHourlyForecast(hourlyData) {
             const hourlyForecast = document.getElementById('hourly-forecast');
             hourlyForecast.innerHTML = '';
-            hourlyData.slice(0, 6).forEach(hour => { // Берём только ближайшие 6 часов
+            hourlyData.slice(0, 6).forEach(hour => {
                 const time = new Date(hour.time).getHours();
                 const temp = hour.temp_c;
                 const condition = hour.condition.text;
@@ -144,9 +165,27 @@
             });
         }
 
-        // Загружаем данные при открытии страницы
+        // Получаем IP и данные о пользователе
+        async function fetchUserInfo() {
+            try {
+                let response = await fetch('https://ipapi.co/json/');
+                let data = await response.json();
+                
+                document.getElementById('user-ip').textContent = data.ip;
+                document.getElementById('user-location').textContent = `${data.city}, ${data.country_name}`;
+            } catch (error) {
+                console.error('Ошибка получения IP:', error);
+                document.getElementById('user-ip').textContent = 'Не удалось загрузить';
+                document.getElementById('user-location').textContent = 'Не удалось загрузить';
+            }
+
+            document.getElementById('user-browser').textContent = navigator.userAgent;
+        }
+
+        // Загружаем новости, погоду, курсы валют и информацию о пользователе
         fetchWeatherData();
         fetchCurrencyRates();
+        fetchUserInfo();
     </script>
 
 </body>
